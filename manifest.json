@@ -1,0 +1,14 @@
+{
+	"manifest_version": 2,
+
+	"name": "DLO Redesign",
+	"version": "0.1.0",
+	"description": "Load the redesign for the DLO",
+
+	"content_scripts": [{
+		"css": ["styles.css"],
+		"js": ["content.js"],
+		"matches": ["https://filmacademie.leerpodium.nl/dlo2v0/*"]
+	}]
+
+}
