@@ -75,7 +75,7 @@ header.outerHTML = `
 </header>`;
 
 header = document.querySelector('header')
-header.querySelector(`#navbar-bottom .nav-link[href="${location.pathname}"]`).classList.add('active')
+header.querySelector(`#navbar-bottom .nav-link[href="${location.pathname}"]`)?.classList.add('active')
 
 //HOME
 if (location.pathname === '/dlo2v0/') {
@@ -284,6 +284,13 @@ else if (location.pathname.endsWith('profiles/')) {
 	else {//Profile page
 
 	}
+}
+else if (location.pathname.startsWith('/dlo2v0/project/')) {
+	content.querySelectorAll(`.entry-content > div.card.mb-3:first-of-type`)
+	main.classList.add('p-3');
+	main.innerHTML = `
+<div></div>
+` + content.innerHTML
 }
 else {
 	main.classList.add('p-3');
