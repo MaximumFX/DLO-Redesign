@@ -141,6 +141,9 @@ b, strong {
 }
 
 /* Navbar */
+.navbar {
+	margin-bottom: 0 !important;
+}
 .navbar-nav a {
 	margin: 0 !important;
 }
