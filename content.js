@@ -1,3 +1,24 @@
+//FUNCTIONS
+const getParameterByName = (name, url) => {
+	if (!url) {
+		url = window.location.href;
+	}
+	name = name.replace(/[\[\]]/g, "\\$&");
+	const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+		results = regex.exec(url);
+	if (!results) return null;
+	if (!results[2]) return '';
+	return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+const fetchAsync = async (url, data) => {
+	let response = await fetch(url, data);
+	return await response.json();
+};
+const formatTime = timestamp => {
+	const date = new Date(timestamp);
+	return date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
+};
+
 //SITE WIDE
 const ids = {
 	home: {
@@ -49,7 +70,11 @@ header.outerHTML = `
 					<a class="nav-link" href="https://filmacademie.leerpodium.nl/dlo2v0/handleiding/" title="Handleiding"><i class="far fa-info-circle"></i></a>
 					<a class="nav-link" href="" title="Berichten"><i class="far fa-bell"></i></a>
 					<a class="nav-link" href="https://filmacademie.leerpodium.nl/dlo2v0/?lp-redirect=new-post" title="Nieuw bericht"><i class="far fa-plus"></i></a>
-					<div class="avatar avatar-nfa-white avatar-2"><img src="https://filmacademie.leerpodium.nl/dlo2v0/wp-content/uploads/sites/183/2020/08/IMG_1900_cd2e5ae2ad203964da7e611b64c396d5fab500ec7ebb2fa4-150x150.png" alt=""></div>
+					<a class="nav-link" href="https://filmacademie.leerpodium.nl/dlo2v0/?lp-redirect=my-profile">
+						<div class="avatar avatar-nfa-white avatar-2">
+							<img src="https://filmacademie.leerpodium.nl/dlo2v0/wp-content/uploads/sites/183/2020/08/IMG_1900_cd2e5ae2ad203964da7e611b64c396d5fab500ec7ebb2fa4-150x150.png" alt="">
+						</div>
+					</a>
 				</div>
 			</div>
 		</div>
@@ -132,6 +157,9 @@ if (location.pathname === '/dlo2v0/') {
 	<div class="card-body pr-3 pb-3 bl-3 pt-0">
 		${post.querySelector('.card-body').innerHTML}
 	</div>
+	<div class="card-footer bg-white pr-3 pb-3 bl-3 pt-0">
+		<a class="" href="${post.querySelector('.card-footer a').getAttribute('href')}" target="_blank"><i class="far fa-briefcase"></i> Bekijk op portfolio</a>
+	</div>
 </div>
 `
 	})
@@ -178,21 +206,37 @@ if (location.pathname === '/dlo2v0/') {
 				<div class="col">
 					<h1>Vandaag</h1>
 				</div>
-				<div class="col">
+				<div class="col-auto">
 					<a href="https://ahk-nfa.bitbybit-is.nl/nfa/" target="_blank">Bekijk rooster</a>
 				</div>
 			</div>
-			<div id="today" class="mb-4"></div>
+			<div id="today" class="mb-4"><p class="text-center"><i class="fas fa-spinner fa-pulse"></i></p></div>
 		</div>
 	</div>
 </div>
 `;
+
+	let date = new Date();
+	date = date.getFullYear() + '-' + ((date.getMonth() + 1).length < 2 ? '0' : '') + (date.getMonth() + 1) + '-' + date.getDate();
+	fetchAsync(`https://maximumfx.nl/filmdagboek/rooster.php`).then(json => {
+		console.log(json);
+		main.querySelector('#today').innerHTML = '';
+		json.items.filter(i => i.groups.split(' ').some(a => a.endsWith('-1')) && i.status !== -8).forEach(i => {
+			console.log(i);
+		main.querySelector('#today').innerHTML += `
+<div class="mb-3" title="${i.activityName}">
+	<p class="mb-1"><b>${formatTime(i.startTss)} - ${formatTime(i.endTss)}</b> (${i.roomsDisplayValue})</p>
+	<p class="mb-1">${i.activityDisplayValue} - ${i.occupationsDisplayValue}</p>
+	<p class="mb-1 text-muted"><small>${i.groupsDisplayValue}</small></p>
+</div>
+<hr>
+`})
+	})
 }
 else if (location.pathname.endsWith('profiles/')) {
-	if (location.search === '') {
+	if (location.search === '' || getParameterByName('wpv_paged')) {
 		let profiles = [];
 		content.querySelectorAll(`.entry-content > div:first-of-type > .card`).forEach(item => {
-			console.log(item);
 			profiles.push({
 				id: item.querySelector('a[href^="?profile="]').getAttribute('href').trim().split('=')[1],
 				icon: item.querySelector('img').src,
@@ -203,7 +247,6 @@ else if (location.pathname.endsWith('profiles/')) {
 			})
 		})
 		profiles.sort((a, b) => (a.name > b.name) ? 1 : -1)
-		console.log(profiles);
 
 		const getProfileCard = p => `
 <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2 mb-4">
@@ -211,7 +254,7 @@ else if (location.pathname.endsWith('profiles/')) {
 		<div class="card-img-top" style="background-image: url('${p.icon}');"></div>
 		<div class="card-body">
 			<h5 class="card-title">${p.name}</h5>
-			<p class="card-text">${p.studyProgramme} ${p.year}</p>
+			<p class="card-text ${(p.studyProgramme||p.year)?'':'d-none'}">${p.studyProgramme} ${p.year}</p>
 <!--			<p class="text-muted">${p.class}</p>-->
 		</div>
 		<div class="card-footer">
@@ -242,13 +285,13 @@ else if (location.pathname.endsWith('profiles/')) {
 							<span aria-hidden="true">&laquo;</span>
 						</a>
 					</li>
-					<li class="page-item active"><a class="page-link" href="#">1</a></li>
-					<li class="page-item"><a class="page-link" href="#">2</a></li>
-					<li class="page-item"><a class="page-link" href="#">3</a></li>
-					<li class="page-item"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">...</a></li>
-					<li class="page-item"><a class="page-link" href="#">10</a></li>
+					<li class="page-item active"><a class="page-link" href="?wpv_paged=1">1</a></li>
+					<li class="page-item"><a class="page-link" href="?wpv_paged=2">2</a></li>
+					<li class="page-item"><a class="page-link" href="?wpv_paged=3">3</a></li>
+					<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">...</a></li>
+					<li class="page-item"><a class="page-link" href="?wpv_paged=10">10</a></li>
 					<li class="page-item">
-						<a class="page-link" href="#" aria-label="Next">
+						<a class="page-link" href="?wpv_paged=2" aria-label="Next">
 							<span aria-hidden="true">&raquo;</span>
 						</a>
 					</li>
@@ -282,15 +325,68 @@ else if (location.pathname.endsWith('profiles/')) {
 `;
 	}
 	else {//Profile page
-
+		main.classList.add('p-3');
+		main.innerHTML = content.innerHTML
 	}
 }
 else if (location.pathname.startsWith('/dlo2v0/project/')) {
-	content.querySelectorAll(`.entry-content > div.card.mb-3:first-of-type`)
-	main.classList.add('p-3');
+	const active = getParameterByName('lp-view');
+	const views = {
+		berichten: active === 'project-messages',
+		beschrijving: active === 'project-description',
+		programma: active === 'project-planning',
+		deelnemers: active === 'project-participants',
+		taken: active === 'project-tasks',
+		bronnen: active === 'project-resources'
+	}
+
+	let groups = [];
+	content.querySelectorAll(`.entry-content .project-planning .lp-modules > .lp-module`).forEach(item => {
+		groups.push({
+			id: item.id,
+			title: item.querySelector('[data-toggle="collapse"] h2').textContent.trim(),
+			content: item.querySelector('.collapse > div').innerHTML,
+		})
+	})
+
 	main.innerHTML = `
-<div></div>
-` + content.innerHTML
+<div class="jumbotron jumbotron-fluid blok-jumbotron text-white" style="background-image: ${content.querySelector(`.entry-content > div.card.mb-3:first-of-type`).style.backgroundImage.replace('"', '\'')}">
+	<div class="container h-100">
+		<div class="title-container">
+			<h1 class="display-4">${content.querySelector(`.entry-header h1`).textContent.trim()}</h1>
+		</div>
+		<div class="nav nav-tabs" id="myTab" role="tablist">
+			<a class="nav-link ${views.berichten ? 'active' : ''}" id="tabs-berichten-tab" data-toggle="tab" href="#tabs-berichten" role="tab" aria-controls="tabs-berichten" aria-selected="${views.berichten}">Berichten</a>
+			<a class="nav-link ${views.beschrijving ? 'active' : ''}" id="tabs-beschrijving-tab" data-toggle="tab" href="#tabs-beschrijving" role="tab" aria-controls="tabs-beschrijving" aria-selected="${views.beschrijving}">Beschrijving</a>
+			<a class="nav-link ${views.programma ? 'active' : ''}" id="tabs-programma-tab" data-toggle="tab" href="#tabs-programma" role="tab" aria-controls="tabs-programma" aria-selected="${views.programma}">Programma</a>
+			<a class="nav-link ${views.deelnemers ? 'active' : ''}" id="tabs-deelnemers-tab" data-toggle="tab" href="#tabs-deelnemers" role="tab" aria-controls="tabs-deelnemers" aria-selected="${views.deelnemers}">Deelnemers</a>
+			<a class="nav-link ${views.taken ? 'active' : ''}" id="tabs-taken-tab" data-toggle="tab" href="#tabs-taken" role="tab" aria-controls="tabs-taken" aria-selected="${views.taken}">Taken</a>
+			<a class="nav-link ${views.bronnen ? 'active' : ''}" id="tabs-bronnen-tab" data-toggle="tab" href="#tabs-bronnen" role="tab" aria-controls="tabs-bronnen" aria-selected="${views.bronnen}">Bronnen</a>
+		</div>
+	</div>
+</div>
+<div class="container mb-3">
+	<div class="row">
+		<div class="col-3">
+			<div class="nav flex-column nav-pills sticky-top" id="tabs-tab" role="tablist" aria-orientation="vertical">
+				${groups.map(i => `
+<a class="nav-link text-capitalize ${groups[0] === i?'active':''}" id="v-pills-${i.id}-tab" data-toggle="tab" href="#v-pills-${i.id}" role="tab" aria-controls="v-pills-${i.id}" aria-selected="${groups[0] === i}">${i.title}</a>
+`).join('')}
+			</div>
+		</div>
+		<div class="col-9">
+			<div class="tab-content" id="tabs-tabContent">
+				${groups.map(i => `
+				<div class="tab-pane fade ${groups[0] === i ? 'show active' : ''}" id="v-pills-${i.id}" role="tabpanel" aria-labelledby="v-pills-${i.id}-tab">
+					<h1 class="text-capitalize">${i.title}</h1>
+					<div>
+						${i.content}
+					</div>
+				</div>`).join('')}
+			</div>
+		</div>
+	</div>
+</div>`
 }
 else {
 	main.classList.add('p-3');

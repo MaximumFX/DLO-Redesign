@@ -214,6 +214,7 @@ b, strong {
 }
 .home-sidepanel.right {
 	border-left: 1px solid var(--border);
+	overflow-y: scroll;
 }
 .home-main {
 	height: calc(100vh - 7rem);
@@ -235,6 +236,49 @@ b, strong {
 .card-project a {
 	font-size: .875rem;
 	color: var(--text);
+}
+
+/* Blok */
+.blok-jumbotron {
+	background-position: center;
+	background-size: cover;
+	padding: 0 !important;
+	height: 12rem;
+	border-bottom: 1px solid var(--border);
+}
+.blok-jumbotron .container {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}
+.blok-jumbotron .title-container {
+	flex-grow: 1;
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+}
+.blok-jumbotron .nav-tabs {
+	border: 0;
+}
+.blok-jumbotron .nav-tabs .nav-link {
+	padding: .75rem 0 !important;
+	margin-right: 2rem !important;
+	color: var(--white) !important;
+	background-color: transparent !important;
+	box-shadow: none !important;
+	border-bottom: .25rem solid transparent !important;
+	font-weight: var(--fw-normal) !important;
+}
+.blok-jumbotron .nav-tabs .nav-link.active {
+	border-color: var(--white) !important;
+	font-weight: var(--fw-medium) !important;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+	color: var(--white) !important;
+}
+#tabs-tab {
+	top: 9rem;
 }
 
 /* Profiles */
